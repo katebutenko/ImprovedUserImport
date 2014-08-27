@@ -1,0 +1,14 @@
+C:\inetpub\wwwroot\sc70rev130424ecm21u2\Website\bin\Sitecore.Support.417993.dll
+C:\inetpub\wwwroot\sc70rev130424ecm21u2\Website\bin\Sitecore.Support.417993.pdb
+C:\inetpub\wwwroot\sc70rev130424ecm21u2\Sitecore.Support.417993\obj\Release\Sitecore.Support.417993.dll
+C:\inetpub\wwwroot\sc70rev130424ecm21u2\Sitecore.Support.417993\obj\Release\Sitecore.Support.417993.pdb
+C:\inetpub\wwwroot\sc70rev130424ecm21u3\Website\bin\Sitecore.Support.417993.dll
+C:\inetpub\wwwroot\sc70rev130424ecm21u3\Website\bin\Sitecore.Support.417993.pdb
+D:\Support\Issues\AusSuper\sc70rev130424ecm21u3\Website\bin\Sitecore.Support.417993.dll
+D:\Support\Issues\AusSuper\sc70rev130424ecm21u3\Website\bin\Sitecore.Support.417993.pdb
+D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\obj\Release\Sitecore.Support.417993.dll
+D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\obj\Release\Sitecore.Support.417993.pdb
+D:\Support\Issues\AusSuper\patchWithCsv\bin\Sitecore.Support.417993.dll
+D:\Support\Issues\AusSuper\patchWithCsv\bin\Sitecore.Support.417993.pdb
+D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\bin\Sitecore.Support.417993.dll
+D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\bin\Sitecore.Support.417993.pdb
