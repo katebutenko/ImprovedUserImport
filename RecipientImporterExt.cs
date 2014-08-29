@@ -167,7 +167,7 @@ namespace Sitecore.Support.Modules.EmailCampaign.Core
             }
             catch (Exception e)
             {
-              Log.Info(string.Format("RecipientImporterExt debug info:  Invalid email {0}", list2.ToString()), this);
+              Log.Info(string.Format("RecipientImporterExt debug info:  Invalid email {0}", string.Join(",", list2.ToArray())), this);
               streamWriter.WriteLine(string.Join(",", list2.ToArray()));
               list2 = csvFile.ReadLine();
               Logging.LogError(e);
@@ -191,51 +191,76 @@ namespace Sitecore.Support.Modules.EmailCampaign.Core
 		    num4
 	    });
 
-      try
-      {
-        Sitecore.Data.Database master = Sitecore.Configuration.Factory.GetDatabase("master");
-        Sitecore.Data.Items.Item itemToSend = master.GetItem(Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.MessagePath", "/sitecore/content/Home/Email Campaign/Messages/Service Messages/Self-Service Subscription/Subscription Notification"));
-        MessageItem messageItem = Sitecore.Modules.EmailCampaign.Factory.GetMessage(itemToSend);
-        //var report = new MediaItem();
-        //messageItem.Attachments.Add(
-        messageItem.Body = string.Format("Recipients imported: {0} <br/> E-mail addresses already exist: {1} <br/> E-mail addresses not provided: {2} <br/> Users not imported as required fields not available: {3}"
-                                        + " <br/> You can check report file with the failed records here: {4}. <br/> Import finished at " + DateTime.Now.ToString(@"d/M/yyyy hh:mm:ss tt"), num, num2, num3, num4, pathToEmailReport);
-        messageItem.Subject = "User import from "+Path.GetFileNameWithoutExtension(options.Filename)+" finished." ;
-        SendingManager sendingManager = new SendingManager(messageItem);
-
-        ListString usernamesToSend = new ListString(Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.SendTo", "sitecore\\admin"), ',');
-        if (usernamesToSend.Count == 0)
-        {
-            Log.Info("RecipientImporterExt debug info: no users to send email to ", this);
-            return result;
-        }
-        foreach (string nameString in usernamesToSend)
-        {
-            Contact contactToSend = Sitecore.Modules.EmailCampaign.Factory.GetContactFromName(nameString);
-            if (contactToSend != null)
-            {
-                Log.Info("RecipientImporterExt debug info: Sending notification about the import to " + contactToSend.Profile.Email, this);
-                sendingManager.SendStandardMessage(contactToSend);
-            }
-        }
-
-      
-        //User user = Sitecore.Context.User;
-        //if (user != null)
-        //{
-        //    string username = user.Name;
-        //    Log.Info("------------contactToSend2: " + username, this);
-        //    sendingManager.SendStandardMessage(Sitecore.Modules.EmailCampaign.Factory.GetContactFromName(username));
-        //}
-      }
-      catch (Exception e)
-      {
-
-        Logging.LogError(e);
-      }
-
+       NotifyUsers(options, num, num2, num3, num4, pathToEmailReport);
 
       return result;
+    }
+
+    private void NotifyUsers(ImportOptions options, int num, int num2, int num3, int num4, string pathToEmailReport)
+    {
+        try
+        {
+            Sitecore.Data.Database master = Sitecore.Modules.EmailCampaign.Util.GetContentDb();          
+
+            MediaCreatorOptions md = new MediaCreatorOptions();
+
+            md.Destination = @"/sitecore/media library/Files/" + Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.PathToEmailReport", "/temp")+"/" + Path.GetFileNameWithoutExtension(pathToEmailReport);    // Set options
+            md.Database = master;   // Set options
+            MediaItem mediaItem = null;
+            using (new SecurityDisabler())   // Use the SecurityDisabler object to override the security settings
+            {
+                // Create Media in database from file
+                mediaItem = MediaManager.Creator.CreateFromFile(pathToEmailReport, md);
+            }  
+
+            Sitecore.Data.Items.Item itemToSend = master.GetItem(Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.MessagePath", "/sitecore/content/Home/Email Campaign/Messages/Service Messages/Self-Service Subscription/Subscription Notification"));
+            MessageItem messageItem = Sitecore.Modules.EmailCampaign.Factory.GetMessage(itemToSend);
+
+            messageItem.Body = string.Format("Recipients imported: {0} <br/> E-mail addresses already exist: {1} <br/> E-mail addresses not provided: {2} <br/> Users not imported as required fields not available: {3}"
+                                            + " <br/> You can check report file with the failed records here: {4}. <br/> Import finished at " + DateTime.Now.ToString(@"d/M/yyyy hh:mm:ss tt"), num, num2, num3, num4, pathToEmailReport);
+            messageItem.Subject = "User import from " + Path.GetFileNameWithoutExtension(options.Filename) + " finished.";
+            if (mediaItem != null)
+            {
+                messageItem.Attachments.Add(mediaItem);
+            }
+            SendingManager sendingManager = new SendingManager(messageItem);
+
+            ListString usernamesToSend = new ListString(Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.SendTo", "sitecore\\admin"), ',');
+            if (usernamesToSend.Count == 0)
+            {
+                Log.Info("RecipientImporterExt debug info: no users to send email to ", this);
+                //  return result;
+            }
+            else
+            {
+                foreach (string nameString in usernamesToSend)
+                {
+                    Contact contactToSend = Sitecore.Modules.EmailCampaign.Factory.GetContactFromName(nameString);
+                    if (contactToSend != null)
+                    {
+                        Log.Info("RecipientImporterExt debug info: Sending notification about the import to " + contactToSend.Profile.Email, this);
+                        sendingManager.SendStandardMessage(contactToSend);
+                    }
+                }
+            }
+
+            User user = Sitecore.Context.User;
+            if (user != null && !usernamesToSend.Contains(user.Name))
+            {
+                string username = user.Name;
+                Contact contactToSend = Sitecore.Modules.EmailCampaign.Factory.GetContactFromName(username);
+                if (contactToSend != null)
+                {
+                    Log.Info("RecipientImporterExt debug info: Sending notification about the import to " + username, this);
+                    sendingManager.SendStandardMessage(contactToSend);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+
+            Logging.LogError(e);
+        }
     }
 
     // Sitecore.Modules.EmailCampaign.Core.RecipientImporter
