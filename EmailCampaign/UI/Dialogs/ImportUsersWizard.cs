@@ -91,7 +91,10 @@ namespace Sitecore.Support.Modules.EmailCampaign.UI.Dialogs
     private static void StartImportJob(string name, string method, object helper, params object[] args)
     {
       string str = (Context.Site != null) ? Context.Site.Name : Util.GetContentSite().Name;
-      JobOptions options = new JobOptions(name, method, str, helper, method, args);
+      JobOptions options = new JobOptions(name, method, str, helper, method, args)
+       {
+            ContextUser = Context.User
+	     };
       options.EnableSecurity = false;
       options.AfterLife = (TimeSpan.FromSeconds(3.0));
       options.WriteToLog = true;
