@@ -13,6 +13,10 @@ using Sitecore.IO;
 using System.IO;
 using Sitecore.Data.Items;
 using Sitecore.Text;
+using Sitecore.Resources.Media;
+using Sitecore.SecurityModel;
+using Sitecore.Data.Events;
+using Sitecore.Events;
 
 namespace Sitecore.Support.Modules.EmailCampaign.Core
 {
@@ -90,89 +94,92 @@ namespace Sitecore.Support.Modules.EmailCampaign.Core
 
             try
             {
-              bool flag = false;
-              if (list.Count < list2.Count)
-              {
-                num4++;
-                Log.Info(string.Format("RecipientImporterExt debug info: Invalid row {0}", string.Join(",", list2.ToArray())), this);
-                streamWriter.WriteLine(string.Join(",", list2.ToArray()));
-                list2 = csvFile.ReadLine();
-              }
-              else
-              {
-                string text = list2[emailColumnIndex];
-                Log.Info(string.Format("RecipientImporterExt debug info: Processing the {0} record ...", text), this);
-                if (!Util.IsValidEmail(text))
+                using (new EventDisabler())
                 {
-                  text = this.TryFindEmail(text);
-                  if (string.IsNullOrEmpty(text))
-                  {
-                    num3++;
-                    Log.Info(string.Format("RecipientImporterExt debug info:  Invalid email {0}", text), this);
-                    streamWriter.WriteLine(string.Join(",", list2.ToArray()));
-                    list2 = csvFile.ReadLine();
-                    continue;
-                  }
-                }
-                string text2 = options.DomainName + "\\" + Util.AddressToUserName(text);
-                Contact contactFromName;
-                if (User.Exists(text2))
-                {
-                  if (options.ConflictOption == ImportOptions.ConflictOptions.SkipUser)
-                  {
-                    this.AddUserToRoles(options, text2);
-                    num2++;
-                    Log.Info(string.Format("RecipientImporterExt debug info:  Record is skipped due to SkipUser setting ...", text), this);
-                    streamWriter.WriteLine(string.Join(",", list2.ToArray()));
-                    list2 = csvFile.ReadLine();
-                    continue;
-                  }
-                  flag = (options.ConflictOption == ImportOptions.ConflictOptions.KeepProperties);
-                  contactFromName = Factory.GetContactFromName(text2);
-                }
-                else
-                {
-                  MembershipUser membershipUser = Membership.CreateUser(text2, text2);
-                  membershipUser.ResetPassword();
-                  contactFromName = Factory.GetContactFromName(text2);
-                  contactFromName.Profile.ProfileItemId = options.Root.Settings.SubscriberProfile;
-                  contactFromName.Profile.Save();
-                }
-                if (!flag)
-                {
-                  contactFromName.Profile.Email = text;
-                  contactFromName.Profile["IsAnonymousSubscriber"] = "true";
-                }
-                foreach (string current in options.MappedProperties.Keys)
-                {
-                  for (int i = 0; i < list.Count; i++)
-                  {
-                    if (options.MappedProperties[current].Equals(list[i]))
+                    bool flag = false;
+                    if (list.Count < list2.Count)
                     {
-                      if (!flag || string.IsNullOrEmpty(contactFromName.Profile[current]))
-                      {
-                        contactFromName.Profile[current] = list2[i];
-                      }
-                      break;
+                        num4++;
+                        Log.Info(string.Format("RecipientImporterExt debug info: Invalid row {0}", string.Join(",", list2.ToArray())), this);
+                        streamWriter.WriteLine(string.Join(",", list2.ToArray()));
+                        list2 = csvFile.ReadLine();
                     }
-                  }
-                }
-                contactFromName.Profile.Save();
-                this.AddUserToRoles(options, text2);
-                num++;
-                list2 = csvFile.ReadLine();
-              }
-
-
+                    else
+                    {
+                        string text = list2[emailColumnIndex];
+                        Log.Info(string.Format("RecipientImporterExt debug info: Processing the {0} record ...", text), this);
+                        if (!Util.IsValidEmail(text))
+                        {
+                            text = this.TryFindEmail(text);
+                            if (string.IsNullOrEmpty(text))
+                            {
+                                num3++;
+                                Log.Info(string.Format("RecipientImporterExt debug info:  Invalid email {0}", text), this);
+                                streamWriter.WriteLine(string.Join(",", list2.ToArray()));
+                                list2 = csvFile.ReadLine();
+                                continue;
+                            }
+                        }
+                        string text2 = options.DomainName + "\\" + Util.AddressToUserName(text);
+                        Contact contactFromName;
+                        if (User.Exists(text2))
+                        {
+                            if (options.ConflictOption == ImportOptions.ConflictOptions.SkipUser)
+                            {
+                                this.AddUserToRoles(options, text2);
+                                num2++;
+                                Log.Info(string.Format("RecipientImporterExt debug info:  Record is skipped due to SkipUser setting ...", text), this);
+                                streamWriter.WriteLine(string.Join(",", list2.ToArray()));
+                                list2 = csvFile.ReadLine();
+                                continue;
+                            }
+                            flag = (options.ConflictOption == ImportOptions.ConflictOptions.KeepProperties);
+                            contactFromName = Factory.GetContactFromName(text2);
+                        }
+                        else
+                        {
+                            MembershipUser membershipUser = Membership.CreateUser(text2, text2);
+                            membershipUser.ResetPassword();
+                            contactFromName = Factory.GetContactFromName(text2);
+                            contactFromName.Profile.ProfileItemId = options.Root.Settings.SubscriberProfile;
+                            // contactFromName.Profile.Save(); - fix to decrease the number of events in EventQueue
+                        }
+                        if (!flag)
+                        {
+                            contactFromName.Profile.Email = text;
+                            contactFromName.Profile["IsAnonymousSubscriber"] = "true";
+                        }
+                        foreach (string current in options.MappedProperties.Keys)
+                        {
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                if (options.MappedProperties[current].Equals(list[i]))
+                                {
+                                    if (!flag || string.IsNullOrEmpty(contactFromName.Profile[current]))
+                                    {
+                                        contactFromName.Profile[current] = list2[i];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        contactFromName.Profile.Save();
+                        this.AddUserToRoles(options, text2);
+                        num++;
+                        list2 = csvFile.ReadLine();
+                    }
+                }               
             }
             catch (Exception e)
             {
-              Log.Info(string.Format("RecipientImporterExt debug info:  Invalid email {0}", string.Join(",", list2.ToArray())), this);
+              Log.Info(string.Format("RecipientImporterExt debug info:  row cannot be processed. {0}", string.Join(",", list2.ToArray())), this);
               streamWriter.WriteLine(string.Join(",", list2.ToArray()));
               list2 = csvFile.ReadLine();
               Logging.LogError(e);
             }
           }
+          //Need to clear UsersInRole and AccessResult cache, because events were disabled
+          Event.RaiseEvent("roles:relationsRemoved", new object[] { "dummyRoleName" });
         }
         catch (Exception e)
         {
@@ -228,7 +235,7 @@ namespace Sitecore.Support.Modules.EmailCampaign.Core
             ListString usernamesToSend = new ListString(Sitecore.Configuration.Settings.GetSetting("RecipientImporterExt.SendTo", "sitecore\\admin"), ',');
             if (usernamesToSend.Count == 0)
             {
-                Log.Info("RecipientImporterExt debug info: no users to send email to ", this);
+                Log.Info("RecipientImporterExt debug info: no users configured to send email to. Email will be sent only to the context user.", this);
                 //  return result;
             }
             else

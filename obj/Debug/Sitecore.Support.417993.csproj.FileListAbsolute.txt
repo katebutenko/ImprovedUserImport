@@ -11,8 +11,8 @@ D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\obj\Debug\Siteco
 D:\Support\Issues\AusSuper\patchWithCsv\Sitecore.Support.417993\obj\Debug\Sitecore.Support.417993.pdb
 D:\DeloitteECM\Website\bin\Sitecore.Support.417993.dll
 D:\DeloitteECM\Website\bin\Sitecore.Support.417993.pdb
-D:\DeloitteECM\Sitecore.Support.417993\obj\Debug\Sitecore.Support.417993.csprojResolveAssemblyReference.cache
 D:\DeloitteECM\Sitecore.Support.417993\obj\Debug\Sitecore.Support.417993.dll
 D:\DeloitteECM\Sitecore.Support.417993\obj\Debug\Sitecore.Support.417993.pdb
 D:\DeloitteECM\Sitecore.Support.417993\bin\Sitecore.Support.417993.dll
 D:\DeloitteECM\Sitecore.Support.417993\bin\Sitecore.Support.417993.pdb
+D:\DeloitteECM\Sitecore.Support.417993\obj\Debug\Sitecore.Support.417993.csprojResolveAssemblyReference.cache

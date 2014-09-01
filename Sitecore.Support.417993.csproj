@@ -60,6 +60,8 @@
   <ItemGroup>
     <Compile Include="CoreFactoryExtRecipientImport.cs" />
     <Compile Include="EmailCampaign\UI\Dialogs\ImportUsersWizard.cs" />
+    <Compile Include="Security\SitecoreMembershipProvider.cs" />
+    <Compile Include="Security\SitecoreRoleProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecipientImporterExt.cs" />
   </ItemGroup>
@@ -69,6 +71,7 @@
   <ItemGroup>
     <None Include="Sitecore.Support.417993.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
